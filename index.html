@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Học Tiếng Anh Cá Nhân - A2 to IELTS</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f4f7f6; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        .tabs { display: flex; cursor: pointer; background: #ddd; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 15px; text-align: center; font-weight: bold; color: #555; transition: 0.3s; }
+        .tab:hover, .tab.active { background: #007bff; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        textarea, input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        button { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-right: 5px; margin-bottom: 5px; }
+        button:hover { background: #218838; }
+        .flashcard { background: #fff; border: 2px solid #007bff; padding: 40px; text-align: center; border-radius: 8px; font-size: 24px; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; white-space: pre-line; }
+        .controls { display: flex; justify-content: space-between; }
+        .log-entry { background: #e9ecef; padding: 10px; border-left: 4px solid #007bff; margin-bottom: 10px; border-radius: 0 4px 4px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Lộ Trình A2 - IELTS 6.5</h1>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(event, 'flashcard')">1. Từ Vựng (10p)</div>
+        <div class="tab" onclick="switchTab(event, 'diary')">2. Nhật Ký Viết (10p)</div>
+        <div class="tab" onclick="switchTab(event, 'listening')">3. Luyện Nghe (10p)</div>
+    </div>
+
+    <!-- Tab 1: Flashcard -->
+    <div id="flashcard" class="tab-content active">
+        <div class="flashcard" id="card" onclick="flipCard()">
+            Bấm để lật thẻ
+        </div>
+        <div class="controls">
+            <button onclick="prevCard()">← Từ trước</button>
+            <button onclick="speakWord()">Phát âm 🔊</button>
+            <button onclick="nextCard()">Từ tiếp theo →</button>
+        </div>
+    </div>
+
+    <!-- Tab 2: Writing Diary -->
+    <div id="diary" class="tab-content">
+        <h3>Nhật Ký Học Tập Hàng Ngày</h3>
+        <textarea id="diaryInput" rows="5" placeholder="Viết 3-5 câu về ngày hôm nay hoặc chủ đề IELTS bất kỳ..."></textarea>
+        <button onclick="saveDiary()">Lưu Nhật Ký</button>
+        <div id="diaryList" style="margin-top: 20px;"></div>
+    </div>
+
+    <!-- Tab 3: Listening -->
+    <div id="listening" class="tab-content">
+        <h3>Nghe và Chép Chính Tả (Dictation)</h3>
+        <p>Bấm nghe câu mẫu rồi gõ lại chính xác vào ô bên dưới:</p>
+        <button onclick="playCurrentSentence()">Nghe lại 🔊</button>
+        <button onclick="loadAudio()" style="background: #007bff;">Đổi Câu Mới ↻</button>
+        <textarea id="dictationInput" rows="3" placeholder="Gõ lại những gì bạn nghe được..."></textarea>
+        <button onclick="checkDictation()">Kiểm Tra Kết Quả</button>
+        <p id="dictationResult"></p>
+    </div>
+</div>
+
+<script>
+    // Chuyển Tab
+    function switchTab(event, tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // Logic Flashcard
+    const vocabData = [
+        { word: "Significant", meaning: "Đáng kể, quan trọng" },
+        { word: "Implement", meaning: "Thi hành, áp dụng" },
+        { word: "Environment", meaning: "Môi trường" },
+        { word: "Benefit", meaning: "Lợi ích" },
+        { word: "Global", meaning: "Toàn cầu" }
+    ];
+    let currentCardIndex = 0;
+    let isFlipped = false;
+
+    function updateCard() {
+        const card = document.getElementById('card');
+        isFlipped = false;
+        card.innerText = vocabData[currentCardIndex].word;
+        card.style.background = "#fff";
+    }
+
+    function flipCard() {
+        const card = document.getElementById('card');
+        if (!isFlipped) {
+            card.innerText = vocabData[currentCardIndex].word + "\n\nNghĩa: " + vocabData[currentCardIndex].meaning;
+            card.style.background = "#eef9ff";
+        } else {
+            card.innerText = vocabData[currentCardIndex].word;
+            card.style.background = "#fff";
+        }
+        isFlipped = !isFlipped;
+    }
+
+    function nextCard() {
+        currentCardIndex = (currentCardIndex + 1) % vocabData.length;
+        updateCard();
+    }
+
+    function prevCard() {
+        currentCardIndex = (currentCardIndex - 1 + vocabData.length) % vocabData.length;
+        updateCard();
+    }
+
+    function speakWord() {
+        const utterance = new SpeechSynthesisUtterance(vocabData[currentCardIndex].word);
+        utterance.lang = 'en-US';
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Logic Nhật ký viết
+    function saveDiary() {
+        const text = document.getElementById('diaryInput').value;
+        if (!text.trim()) return alert("Vui lòng viết gì đó trước khi lưu!");
+        
+        const diaries = JSON.parse(localStorage.getItem('ieltsDiaries') || '[]');
+        diaries.unshift({ date: new Date().toLocaleDateString('vi-VN'), content: text });
+        localStorage.setItem('ieltsDiaries', JSON.stringify(diaries));
+        
+        document.getElementById('diaryInput').value = '';
+        renderDiaries();
+    }
+
+    function renderDiaries() {
+        const diaries = JSON.parse(localStorage.getItem('ieltsDiaries') || '[]');
+        const container = document.getElementById('diaryList');
+        container.innerHTML = '<h4>Lịch sử viết:</h4>' + diaries.map(d => `
+            <div class="log-entry">
+                <strong>${d.date}</strong><br>${d.content}
+            </div>
+        `).join('');
+    }
+
+    // Logic Luyện nghe (dùng giọng đọc tiếng Anh tích hợp)
+    const audioSentences = [
+        "Technology plays a significant role in education.",
+        "We need to protect the global environment.",
+        "Regular exercise brings many health benefits.",
+        "The government should implement stricter laws."
+    ];
+    let currentSentenceIndex = 0;
+
+    function playCurrentSentence() {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(audioSentences[currentSentenceIndex]);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9; // Tốc độ chậm vừa phải cho trình độ A2
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function loadAudio() {
+        currentSentenceIndex = (currentSentenceIndex + 1) % audioSentences.length;
+        document.getElementById('dictationInput').value = '';
+        document.getElementById('dictationResult').innerText = '';
+        playCurrentSentence();
+    }
+
+    function checkDictation() {
+        const userInput = document.getElementById('dictationInput').value.trim();
+        const correctText = audioSentences[currentSentenceIndex];
+        const resultText = document.getElementById('dictationResult');
+        
+        if (userInput.toLowerCase() === correctText.toLowerCase()) {
+            resultText.innerHTML = '<span style="color:green; font-weight:bold;">✔ Chính xác! Bạn nghe rất tốt.</span>';
+        } else {
+            resultText.innerHTML = `<span style="color:red;">Chưa chính xác. Câu đúng là: <strong>"${correctText}"</strong></span>`;
+        }
+    }
+
+    // Khởi tạo
+    updateCard();
+    renderDiaries();
+</script>
+
+</body>
+</html>
